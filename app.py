@@ -32,6 +32,14 @@ FEATURES_COLUMNS = [
     "exploitation_part",
 ]
 
+st.set_page_config(
+    page_title="Enthic",
+    page_icon="💰",
+    layout="wide",
+    initial_sidebar_state="auto",
+    menu_items=None,
+)
+
 
 @st.cache
 def load_data(data_path: Union[PathLike, str]):
