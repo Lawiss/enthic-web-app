@@ -57,9 +57,9 @@ with st.sidebar:
         "static/enthic_without_bg.e0d245c1.png",
     )
     selected_cat = st.selectbox(
-        label="Sélectionner une entreprise",
+        label="Sélectionner une catégorie d'entreprise :",
         options=CODES_APE.keys(),
-        help="Sélectionnez une entreprise",
+        help="Permet de filtrer les entreprises selon leur code APE.",
     )
 
     selected_df = indicateurs_df.loc[
@@ -76,9 +76,9 @@ with st.sidebar:
     )
     company_names = selected_df_filtered.nom.unique()
     selected_company_name = st.selectbox(
-        label="Sélectionner une entreprise",
+        label="Sélectionner une entreprise :",
         options=company_names,
-        help="Sélectionnez une entreprise",
+        help="Sélectionnez une entreprise pour afficher des informations et sa position sur les graphiques.",
     )
     company_df = selected_df_filtered.loc[
         selected_df.nom == selected_company_name,
