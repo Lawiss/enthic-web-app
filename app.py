@@ -1,16 +1,11 @@
-from turtle import width
-from typing import Union
 from os import PathLike
-from pathlib import Path
-import numpy as np
-import requests
+from typing import Union
 
+import numpy as np
 import pandas as pd
 import streamlit as st
-import plotly.graph_objects as go
 
 from utils import create_fig
-
 
 DATA_PATH = "https://entropeak-public-data.s3.eu-west-3.amazonaws.com/enthic/indicateurs_2020_full_20220412.csv"
 CODES_APE = {
