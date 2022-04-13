@@ -45,7 +45,7 @@ indicateurs_df = load_data(DATA_PATH)
 
 with st.sidebar:
     st.image(
-        "/Users/luis/projects/enthic/streamlit_app/static/enthic_without_bg.e0d245c1.png",
+        "static/enthic_without_bg.e0d245c1.png",
     )
     selected_cat = st.selectbox(
         label="Sélectionner une entreprise",
