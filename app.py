@@ -91,6 +91,7 @@ with st.sidebar:
                 "commune",
                 "Chiffres d’affaires nets",
                 "Effectif moyen du personnel",
+                "Salaire moyen",
             ]
         ]
         .rename(" ")
@@ -114,6 +115,10 @@ with st.sidebar:
         ] = f'{int(company_df_formated["Effectif moyen du personnel"]):_d}'.replace(
             "_", " "
         )
+    if not np.isnan(company_df_formated["Salaire moyen"]):
+        company_df_formated[
+            "Salaire moyen"
+        ] = f'{int(company_df_formated["Salaire moyen"]):_d} €'.replace("_", " ")
     st.markdown(company_df_formated.to_markdown())
 
 
