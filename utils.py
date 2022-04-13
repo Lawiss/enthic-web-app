@@ -3,7 +3,9 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
-def create_fig(df: pd.DataFrame, company_df, x_var: str, y_var: str) -> go.Figure:
+def create_fig(
+    df: pd.DataFrame, company_series: pd.Series, x_var: str, y_var: str
+) -> go.Figure:
     hover_text = (
         df.nom
         + "<br><b>Chiffre d'affaire :<b> "
@@ -43,10 +45,43 @@ def create_fig(df: pd.DataFrame, company_df, x_var: str, y_var: str) -> go.Figur
         yaxis_title=y_var,
     )
     fig.add_annotation(
-        x=company_df[x_var],
-        y=company_df[y_var],
-        text=company_df["nom"],
+        x=company_series[x_var],
+        y=company_series[y_var],
+        text=company_series["nom"],
         font_size=15,
     )
+
+    return fig
+
+
+def create_hist(series: pd.Series, company_series: pd.Series) -> go.Figure:
+
+    fig = go.Figure(
+        data=[
+            go.Histogram(
+                x=series["Salaire moyen"],
+                marker_color="#d59f64",
+                marker_line_color="#636e72",
+                marker_line_width=1,
+                xbins_size=5000,
+                xbins_start=0,
+                hovertemplate="Salaire moyen compris dans l'intervalle <b>%{x}</b> € pour <b>%{y}</b> entreprises<extra></extra>",
+                hoverinfo="x+y",
+            )
+        ]
+    )
+    fig.add_vline(
+        x=company_series["Salaire moyen"],
+        line_dash="longdashdot",
+        annotation_text=company_series["nom"]
+        + " - "
+        + f'{int(company_series["Salaire moyen"]):,d} €'.replace(",", " "),
+        annotation_position="top right",
+    )
+    fig.update_layout(
+        xaxis_title="Salaire moyen (en euros)",
+        yaxis_title="Nombre d'entreprises",
+    )
+    fig.update_xaxes(nticks=20)
 
     return fig

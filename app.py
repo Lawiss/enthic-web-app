@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from utils import create_fig
+from utils import create_fig, create_hist
 
 DATA_PATH = "https://entropeak-public-data.s3.eu-west-3.amazonaws.com/enthic/indicateurs_2020_full_20220412.csv"
 CODES_APE = {
     "Supermarchés et Hypermarchés": ["^47\.11D", "^47\.11F"],
     "Cultures permanentes": ["^01\.2"],
-    "Extraction de minerais": ["^06"],
     "Restauration": ["^56"],
+    "Activités liées au sport": ["^93.1"],
 }
 FEATURES_NAME_MAPPING = {
     "exploitation_share": "Part du résultat d'exploitation distribuée en participation et impôts",
@@ -119,8 +119,11 @@ with st.sidebar:
 
 fig_1 = create_fig(
     selected_df_filtered,
-    company_df=company_df,
+    company_series=company_df,
     x_var="Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts",
     y_var="Ratio entre les cotisations sociales et les salaires",
 )
 st.plotly_chart(fig_1, use_container_width=True)
+
+fig_2 = create_hist(selected_df_filtered, company_series=company_df)
+st.plotly_chart(fig_2, use_container_width=True)
