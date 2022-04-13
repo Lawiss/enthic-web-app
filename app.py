@@ -4,6 +4,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import streamlit as st
+from st_aggrid import AgGrid
 
 from utils import create_fig, create_hist
 
@@ -67,7 +68,7 @@ with st.sidebar:
     selected_df = selected_df.rename(columns=FEATURES_NAME_MAPPING)
     selected_df_filtered = selected_df.dropna(
         subset=list(FEATURES_NAME_MAPPING.values())
-        + ["nom", "Chiffres d’affaires nets"]
+        + ["nom", "Chiffres d’affaires nets", "Effectif moyen du personnel"]
     )
     st.metric(
         "Nombre d'entreprises avec données complètes en base",
@@ -127,8 +128,24 @@ fig_1 = create_fig(
     company_series=company_df,
     x_var="Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts",
     y_var="Ratio entre les cotisations sociales et les salaires",
+    size_var="Effectif moyen du personnel",
+    color_var="Chiffres d’affaires nets",
 )
 st.plotly_chart(fig_1, use_container_width=True)
 
 fig_2 = create_hist(selected_df_filtered, company_series=company_df)
 st.plotly_chart(fig_2, use_container_width=True)
+AgGrid(
+    selected_df_filtered[
+        [
+            "siren",
+            "nom",
+            "code_postal",
+            "commune",
+            "Chiffres d’affaires nets",
+            "Effectif moyen du personnel",
+            "Salaire moyen",
+        ]
+        + list(FEATURES_NAME_MAPPING.values())
+    ]
+)

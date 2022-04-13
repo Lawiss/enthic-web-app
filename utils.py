@@ -4,7 +4,12 @@ import plotly.graph_objects as go
 
 
 def create_fig(
-    df: pd.DataFrame, company_series: pd.Series, x_var: str, y_var: str
+    df: pd.DataFrame,
+    company_series: pd.Series,
+    x_var: str,
+    y_var: str,
+    size_var: str,
+    color_var: str,
 ) -> go.Figure:
     hover_text = (
         df.nom
@@ -20,8 +25,11 @@ def create_fig(
             go.Scatter(
                 x=df[x_var],
                 y=df[y_var],
-                marker_size=df["Chiffres d’affaires nets"].apply(np.log),
-                marker_color=df["Chiffres d’affaires nets"].apply(np.log10),
+                marker_size=df[size_var],
+                marker_sizemode="area",
+                marker_sizemin=3,
+                marker_sizeref=0.5,
+                marker_color=df[color_var].apply(np.log10),
                 hoverinfo="text",
                 hovertext=hover_text,
                 mode="markers",
@@ -36,13 +44,22 @@ def create_fig(
                 ],
                 marker_colorbar_ticks="outside",
                 marker_colorbar_tickmode="array",
-                marker_sizeref=1,
             )
         ]
     )
     fig.update_layout(
         xaxis_title=x_var,
         yaxis_title=y_var,
+        title="Quels entreprises reversent le plus de participations, impôts et cotisations sociales ?<br><sup>La couleur représente le chiffre d'affaire et la taille le nombre d'employés.</sup>",
+        title_font_size=30,
+        title_font_color="#2d3436",
+        title_pad_l=10,
+    )
+    fig.update_xaxes(
+        tickformat=".2%",
+    )
+    fig.update_yaxes(
+        tickformat=".2%",
     )
     fig.add_annotation(
         x=company_series[x_var],
