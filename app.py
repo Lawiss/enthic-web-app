@@ -121,6 +121,9 @@ with st.sidebar:
             "Salaire moyen"
         ] = f'{int(company_df_formated["Salaire moyen"]):_d} €'.replace("_", " ")
     st.markdown(company_df_formated.to_markdown())
+    st.write(
+        f"Lien vers la fiche Enthic: https://enthic-dataviz.netlify.app/entreprises/{company_df['siren']}"
+    )
 
 
 fig_1 = create_fig(
@@ -135,6 +138,8 @@ st.plotly_chart(fig_1, use_container_width=True)
 
 fig_2 = create_hist(selected_df_filtered, company_series=company_df)
 st.plotly_chart(fig_2, use_container_width=True)
+
+st.write("Vous pouvez explorer les données qui ont permis d'éditer ces graphiques :")
 AgGrid(
     selected_df_filtered[
         [
