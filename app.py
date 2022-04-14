@@ -14,6 +14,8 @@ CODES_APE = {
     "Cultures permanentes": ["^01\.2"],
     "Restauration": ["^56"],
     "Activités liées au sport": ["^93.1"],
+    "Industrie automobile": ["^29"],
+    "Construction aéronautique et spatiale": ["^30.3"],
 }
 FEATURES_NAME_MAPPING = {
     "exploitation_share": "Part du résultat d'exploitation distribuée en participation et impôts",
@@ -149,7 +151,6 @@ AgGrid(
             "commune",
             "Chiffres d’affaires nets",
             "Effectif moyen du personnel",
-            "Salaire moyen",
         ]
         + list(FEATURES_NAME_MAPPING.values())
     ]

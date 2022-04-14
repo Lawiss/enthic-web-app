@@ -11,15 +11,24 @@ def create_fig(
     size_var: str,
     color_var: str,
 ) -> go.Figure:
+
     hover_text = (
         df.nom
-        + "<br><b>Chiffre d'affaire :<b> "
-        + df["Chiffres d’affaires nets"].apply(lambda x: "{:,} €".format(int(x)))
-        + f"<br><b>{x_var} :<b> "
-        + df[x_var].astype(str)
-        + f"<br><b>{y_var} :<b> "
-        + df[y_var].astype(str)
+        + f"<br><b>{color_var} : </b> "
+        + df[color_var].apply(lambda x: "{:,} €".format(int(x)))
+        + f"<br><b>{size_var} : </b>"
+        + df[size_var].astype(int).astype(str)
+        + f"<br><b>{x_var} : </b>"
+        + (df[x_var] * 100).round(2).astype(str)
+        + f"%<br><b>{y_var} : </b> "
+        + (df[y_var] * 100).round(2).astype(str)
+        + "%"
     )
+
+    color_data = df[color_var].apply(np.log10)
+    colorbar_tickvals = np.arange(0, np.ceil(df[color_var].apply(np.log10).max()), 1)
+    colorbar_ticktext = [f"{10**int(e): ,d} €" for e in colorbar_tickvals]
+
     fig = go.Figure(
         [
             go.Scatter(
@@ -29,7 +38,7 @@ def create_fig(
                 marker_sizemode="area",
                 marker_sizemin=3,
                 marker_sizeref=0.5,
-                marker_color=df[color_var].apply(np.log10),
+                marker_color=color_data,
                 hoverinfo="text",
                 hovertext=hover_text,
                 mode="markers",
@@ -37,13 +46,11 @@ def create_fig(
                     "#659999",
                     "#f4791f",
                 ],
-                marker_colorbar_title="Chiffre d'affaire",
-                marker_colorbar_tickvals=np.arange(0, 10, 1),
-                marker_colorbar_ticktext=[
-                    f"{10**e: ,d} €" for e in np.arange(0, 10, 1)
-                ],
+                marker_colorbar_title=color_var,
+                marker_colorbar_tickvals=colorbar_tickvals,
+                marker_colorbar_ticktext=colorbar_ticktext,
                 marker_colorbar_ticks="outside",
-                marker_colorbar_tickmode="array",
+                marker_colorbar_thickness=15,
             )
         ]
     )
@@ -96,6 +103,10 @@ def create_hist(series: pd.Series, company_series: pd.Series) -> go.Figure:
         annotation_position="top right",
     )
     fig.update_layout(
+        title="Comparaison des salaires moyen",
+        title_font_size=30,
+        title_font_color="#2d3436",
+        title_pad_l=10,
         xaxis_title="Salaire moyen (en euros)",
         yaxis_title="Nombre d'entreprises",
     )
