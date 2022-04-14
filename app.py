@@ -6,7 +6,8 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
-from utils import create_fig, create_hist
+from figures import create_bubble_chart, create_hist
+from utils import format_numerical_value
 
 DATA_PATH = "https://entropeak-public-data.s3.eu-west-3.amazonaws.com/enthic/indicateurs_2020_full_20220412.csv"
 CODES_APE = {
@@ -58,9 +59,11 @@ with st.sidebar:
     st.image(
         "static/enthic_without_bg.e0d245c1.png",
     )
+    codes_ape = list(CODES_APE.keys())
+    codes_ape.sort()
     selected_cat = st.selectbox(
         label="Sélectionner une catégorie d'entreprise :",
-        options=CODES_APE.keys(),
+        options=codes_ape,
         help="Permet de filtrer les entreprises selon leur code APE.",
     )
 
@@ -68,20 +71,27 @@ with st.sidebar:
         (indicateurs_df.code_ape_complete.str.match("|".join(CODES_APE[selected_cat])))
     ]
     selected_df = selected_df.rename(columns=FEATURES_NAME_MAPPING)
+
+    total_company_count = selected_df.shape[0]
+
     selected_df_filtered = selected_df.dropna(
         subset=list(FEATURES_NAME_MAPPING.values())
         + ["nom", "Chiffres d’affaires nets", "Effectif moyen du personnel"]
     )
-    st.metric(
-        "Nombre d'entreprises avec données complètes en base",
-        value=len(selected_df_filtered),
+
+    st.markdown(
+        f"**{len(selected_df_filtered):,d}** entreprises sans données manquantes sur **{total_company_count:,d}**"
+        f" au total dans cette catégorie ({len(selected_df_filtered)/total_company_count:.2%}).",
     )
-    company_names = selected_df_filtered.nom.unique()
+
+    company_names = np.sort(selected_df_filtered.nom.unique())
+
     selected_company_name = st.selectbox(
         label="Sélectionner une entreprise :",
         options=company_names,
         help="Sélectionnez une entreprise pour afficher des informations et sa position sur les graphiques.",
     )
+
     company_df = selected_df_filtered.loc[
         selected_df.nom == selected_company_name,
     ].iloc[0]
@@ -106,29 +116,21 @@ with st.sidebar:
             }
         )
     )
-    if not np.isnan(company_df_formated["Chiffres d’affaires nets"]):
-        company_df_formated[
-            "Chiffres d’affaires nets"
-        ] = f'{int(company_df_formated["Chiffres d’affaires nets"]):_d} €'.replace(
-            "_", " "
-        )
-    if not np.isnan(company_df_formated["Effectif moyen du personnel"]):
-        company_df_formated[
-            "Effectif moyen du personnel"
-        ] = f'{int(company_df_formated["Effectif moyen du personnel"]):_d}'.replace(
-            "_", " "
-        )
-    if not np.isnan(company_df_formated["Salaire moyen"]):
-        company_df_formated[
-            "Salaire moyen"
-        ] = f'{int(company_df_formated["Salaire moyen"]):_d} €'.replace("_", " ")
+
+    company_df_formated["Effectif moyen du personnel"] = format_numerical_value(
+        company_df_formated["Effectif moyen du personnel"]
+    )
+    company_df_formated["Salaire moyen"] = format_numerical_value(
+        company_df_formated["Salaire moyen"]
+    )
+
     st.markdown(company_df_formated.to_markdown())
     st.write(
         f"Lien vers la fiche Enthic: https://enthic-dataviz.netlify.app/entreprises/{company_df['siren']}"
     )
 
 
-fig_1 = create_fig(
+fig_1 = create_bubble_chart(
     selected_df_filtered,
     company_series=company_df,
     x_var="Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts",
