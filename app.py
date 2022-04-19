@@ -78,7 +78,6 @@ available_variables: pd.Series = indicateurs_df.columns[
     ~indicateurs_df.columns.isin(NON_VARIABLES_COLUMNS)
     & ~indicateurs_df.columns.str.contains("error_")
 ].sort_values()
-available_variables_list = available_variables.tolist()
 
 
 with st.sidebar:
@@ -106,6 +105,10 @@ with st.sidebar:
     full_na_variables = selected_df_filtered.columns[is_full_na]
     print(full_na_variables)
     selected_df_filtered = selected_df_filtered.loc[:, ~is_full_na]
+
+    available_variables_list = available_variables[
+        ~available_variables.isin(full_na_variables)
+    ].tolist()
 
     st.markdown(
         f"**{total_company_count:,d}** au total dans cette catégorie ({len(selected_df_filtered)/indicateurs_df['SIREN'].nunique():.2%} du total).",
