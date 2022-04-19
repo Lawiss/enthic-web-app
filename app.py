@@ -1,6 +1,7 @@
 from os import PathLike
 from typing import Union
 
+import json
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -35,6 +36,15 @@ FEATURES_COLUMNS = [
     "profit_sharing",
     "exploitation_part",
 ]
+NON_VARIABLES_COLUMNS = [
+    "SIREN",
+    "Code postal",
+    "Commune",
+    "code_ape",
+    "code_ape_complete",
+    "nom",
+    "description",
+]
 
 st.set_page_config(
     page_title="Enthic",
@@ -49,10 +59,26 @@ st.set_page_config(
 def load_data(data_path: Union[PathLike, str]):
 
     indicateurs_df = pd.read_csv(data_path, index_col=0)
+
+    indicateurs_df = indicateurs_df.rename(
+        columns={
+            "siren": "SIREN",
+            "code_postal": "Code postal",
+            "commune": "Commune",
+        }
+        | FEATURES_NAME_MAPPING
+    )
     return indicateurs_df
 
 
 indicateurs_df = load_data(DATA_PATH)
+
+
+available_variables: pd.Series = indicateurs_df.columns[
+    ~indicateurs_df.columns.isin(NON_VARIABLES_COLUMNS)
+    & ~indicateurs_df.columns.str.contains("error_")
+].sort_values()
+available_variables_list = available_variables.tolist()
 
 
 with st.sidebar:
@@ -74,14 +100,15 @@ with st.sidebar:
 
     total_company_count = selected_df.shape[0]
 
-    selected_df_filtered = selected_df.dropna(
-        subset=list(FEATURES_NAME_MAPPING.values())
-        + ["nom", "Chiffres d’affaires nets", "Effectif moyen du personnel"]
-    )
+    selected_df_filtered = selected_df.dropna(subset=NON_VARIABLES_COLUMNS)
+
+    is_full_na = selected_df_filtered.isna().sum() == len(selected_df_filtered)
+    full_na_variables = selected_df_filtered.columns[is_full_na]
+    print(full_na_variables)
+    selected_df_filtered = selected_df_filtered.loc[:, ~is_full_na]
 
     st.markdown(
-        f"**{len(selected_df_filtered):,d}** entreprises sans données manquantes sur **{total_company_count:,d}**"
-        f" au total dans cette catégorie ({len(selected_df_filtered)/total_company_count:.2%}).",
+        f"**{total_company_count:,d}** au total dans cette catégorie ({len(selected_df_filtered)/indicateurs_df['SIREN'].nunique():.2%} du total).",
     )
 
     company_names = np.sort(selected_df_filtered.nom.unique())
@@ -96,49 +123,91 @@ with st.sidebar:
         selected_df.nom == selected_company_name,
     ].iloc[0]
 
-    company_df_formated = (
-        company_df[
-            [
-                "siren",
-                "code_postal",
-                "commune",
-                "Chiffres d’affaires nets",
-                "Effectif moyen du personnel",
-                "Salaire moyen",
-            ]
+    company_df_formated = company_df[
+        [
+            "SIREN",
+            "Code postal",
+            "Commune",
+            "Chiffres d’affaires nets",
+            "Effectif moyen du personnel",
+            "Salaire moyen",
         ]
-        .rename(" ")
-        .rename(
-            index={
-                "siren": "SIREN",
-                "code_postal": " Code postal",
-                "commune": "Commune",
-            }
-        )
-    )
+    ].rename(" ")
 
+    company_df_formated["Chiffres d’affaires nets"] = format_numerical_value(
+        company_df_formated["Chiffres d’affaires nets"], " €"
+    )
     company_df_formated["Effectif moyen du personnel"] = format_numerical_value(
         company_df_formated["Effectif moyen du personnel"]
     )
     company_df_formated["Salaire moyen"] = format_numerical_value(
-        company_df_formated["Salaire moyen"]
+        company_df_formated["Salaire moyen"], " €"
     )
 
     st.markdown(company_df_formated.to_markdown())
     st.write(
-        f"Lien vers la fiche Enthic: https://enthic-dataviz.netlify.app/entreprises/{company_df['siren']}"
+        f"Lien vers la fiche Enthic: https://enthic-dataviz.netlify.app/entreprises/{company_df['SIREN']}"
     )
 
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    x_var = st.selectbox(
+        "Abscisse :",
+        help="Sélectionner une variable pour l'axe des abscisses :",
+        options=available_variables_list,
+        index=available_variables_list.index(
+            "Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts"
+        ),
+    )
 
-fig_1 = create_bubble_chart(
-    selected_df_filtered,
-    company_series=company_df,
-    x_var="Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts",
-    y_var="Ratio entre les cotisations sociales et les salaires",
-    size_var="Effectif moyen du personnel",
-    color_var="Chiffres d’affaires nets",
-)
-st.plotly_chart(fig_1, use_container_width=True)
+with col2:
+    y_var = st.selectbox(
+        "Ordonnée :",
+        help="Sélectionner une variable pour l'axe des ordonnées :",
+        options=available_variables_list,
+        index=available_variables_list.index(
+            "Ratio entre les cotisations sociales et les salaires"
+        ),
+    )
+with col3:
+    size_var = st.selectbox(
+        "Taille :",
+        help="Sélectionner une variable pour la taille des bulles :",
+        options=available_variables_list,
+        index=available_variables_list.index("Effectif moyen du personnel"),
+    )
+with col4:
+    color_var = st.selectbox(
+        "Couleur :",
+        help="Sélectionner une variable pour la couleur des bulles :",
+        options=available_variables_list,
+        index=available_variables_list.index("Chiffres d’affaires nets"),
+    )
+
+fig_1_df = selected_df_filtered.dropna(subset=[x_var, y_var, size_var, color_var])
+fig_1_companies_count = len(fig_1_df)
+if fig_1_companies_count:
+    st.markdown(
+        f"Avec votre sélection, il reste **{len(fig_1_df)}** entreprises à afficher.",
+        unsafe_allow_html=True,
+    )
+    if company_df[[x_var, y_var]].isna().all():
+        st.info(
+            f"Il ny a pas les données suffisantes pour afficher la position de {company_df['nom']} dans le graphique."
+        )
+
+    fig_1 = create_bubble_chart(
+        fig_1_df,
+        company_series=company_df,
+        x_var=x_var,
+        y_var=y_var,
+        size_var=size_var,
+        color_var=color_var,
+    )
+    st.plotly_chart(fig_1, use_container_width=True)
+else:
+    st.error("Il n'y a pas de données pour la sélection actuelle")
+
 
 fig_2 = create_hist(selected_df_filtered, company_series=company_df)
 st.plotly_chart(fig_2, use_container_width=True)
@@ -147,10 +216,10 @@ st.write("Vous pouvez explorer les données qui ont permis d'éditer ces graphiq
 AgGrid(
     selected_df_filtered[
         [
-            "siren",
+            "SIREN",
             "nom",
-            "code_postal",
-            "commune",
+            "Code postal",
+            "Commune",
             "Chiffres d’affaires nets",
             "Effectif moyen du personnel",
         ]

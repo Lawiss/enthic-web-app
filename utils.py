@@ -5,6 +5,10 @@ from numbers import Number
 
 def format_numerical_value(value: Number, suffix: str = "") -> pd.Series:
     if not np.isnan(value):
-        formated_value = f"{int(value):_d} {suffix}".replace("_", " ")
+        value = f"{int(value):_d} {suffix}".replace("_", " ")
 
-    return formated_value
+    return value
+
+
+def format_to_pretty_decimal(value: Number) -> pd.Series:
+    return "{:,.2f}".format(float(value)).replace(",", " ")
