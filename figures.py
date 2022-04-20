@@ -131,6 +131,7 @@ def create_hist(series: pd.Series, company_series: pd.Series) -> go.Figure:
         title_pad_l=10,
         xaxis_title="Salaire moyen (en euros)",
         yaxis_title="Nombre d'entreprises",
+        margin_b=3,
     )
     fig.update_xaxes(nticks=20)
 
