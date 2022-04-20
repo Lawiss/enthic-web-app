@@ -13,44 +13,39 @@ def create_bubble_chart(
     company_series: pd.Series,
     x_var: str,
     y_var: str,
-    size_var: str,
     color_var: str,
     transformations: Dict[str, Callable] = {},
 ) -> go.Figure:
 
+    df = df.copy()
+    print(company_series[[x_var, y_var, color_var]])
     hover_text = (
         df.nom
         + f"<br><b>{color_var} : </b> "
         + df[color_var].apply(format_to_pretty_decimal)
-        + f"<br><b>{size_var} : </b>"
-        + df[size_var].apply(format_to_pretty_decimal)
         + f"<br><b>{x_var} : </b>"
         + (df[x_var]).apply(format_to_pretty_decimal)
         + f"<br><b>{y_var} : </b> "
         + (df[y_var]).apply(format_to_pretty_decimal)
         + ""
     )
-    df = df.copy()
-    for k, v in transformations.items():
-        df[k] = df[k].apply(v)
 
-    if transformations.get(color_var) is not None:
-        colorbar_tickvals = np.arange(
-            0, np.ceil(df[color_var].apply(transformations.get(color_var)).max()), 1
-        )
+    for k, v in transformations.items():
+        if v is not None:
+            df[k] = df[k].apply(v)
+
+    if transformations.get(color_var) == np.log10:
+        colorbar_tickvals = np.arange(0, np.ceil(df[color_var]).max(), 1)
         colorbar_ticktext = [f"{10**int(e): ,d} €" for e in colorbar_tickvals]
     else:
         colorbar_tickvals = None
         colorbar_ticktext = None
+
     fig = go.Figure(
         [
             go.Scatter(
                 x=df[x_var],
                 y=df[y_var],
-                marker_size=df[size_var],
-                marker_sizemode="area",
-                marker_sizemin=3,
-                marker_sizeref=0.5,
                 marker_color=df[color_var],
                 hoverinfo="text",
                 hovertext=hover_text,
@@ -72,9 +67,10 @@ def create_bubble_chart(
         yaxis_title=y_var,
         title_font_size=30,
         title_font_color="#2d3436",
+        margin_t=10,
     )
 
-    if not company_series[[x_var, y_var]].isna().all():
+    if not company_series[[x_var, y_var]].isna().any():
         fig.add_annotation(
             x=company_series[x_var],
             y=company_series[y_var],
@@ -88,7 +84,7 @@ def create_bubble_chart(
             line_dash="longdashdot",
             annotation_text=company_series["nom"]
             + " - "
-            + f"{int(company_series[x_var]):,d}",
+            + f"{company_series[x_var]:,.2f}",
             annotation_position="top right",
         )
     elif not np.isnan(company_series[y_var]):
@@ -97,7 +93,7 @@ def create_bubble_chart(
             line_dash="longdashdot",
             annotation_text=company_series["nom"]
             + " - "
-            + f"{int(company_series[y_var]):,d}",
+            + f"{company_series[y_var]:,.2f}",
             annotation_position="top right",
         )
     return fig

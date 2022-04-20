@@ -8,43 +8,9 @@ import streamlit as st
 from st_aggrid import AgGrid
 
 from figures import create_bubble_chart, create_hist
+from settings import CODES_APE, DATA_PATH, FEATURES_NAME_MAPPING, NON_VARIABLES_COLUMNS
 from utils import format_numerical_value
 
-DATA_PATH = "https://entropeak-public-data.s3.eu-west-3.amazonaws.com/enthic/indicateurs_2020_full_20220412.csv"
-CODES_APE = {
-    "Supermarchés et Hypermarchés": ["^47\.11D", "^47\.11F"],
-    "Cultures permanentes": ["^01\.2"],
-    "Restauration": ["^56"],
-    "Activités liées au sport": ["^93.1"],
-    "Industrie automobile": ["^29"],
-    "Construction aéronautique et spatiale": ["^30.3"],
-}
-FEATURES_NAME_MAPPING = {
-    "exploitation_share": "Part du résultat d'exploitation distribuée en participation et impôts",
-    "overall_wages_weight": "Part de la masse salariale dans le total des charges d'exploitation",
-    "wage_quality": "Ratio entre les cotisations sociales et les salaires",
-    "average_wage": "Salaire moyen",
-    "profit_sharing": "Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts",
-    "exploitation_part": "Part de la partie 'exploitation' dans le total du compte de résultat",
-    "data_availability": "Indicateur de bon remplissage de la déclaration comptable",
-}
-FEATURES_COLUMNS = [
-    "exploitation_share",
-    "overall_wages_weight",
-    "wage_quality",
-    "average_wage",
-    "profit_sharing",
-    "exploitation_part",
-]
-NON_VARIABLES_COLUMNS = [
-    "SIREN",
-    "Code postal",
-    "Commune",
-    "code_ape",
-    "code_ape_complete",
-    "nom",
-    "description",
-]
 
 st.set_page_config(
     page_title="Enthic",
@@ -84,8 +50,10 @@ with st.sidebar:
     st.image(
         "static/enthic_without_bg.e0d245c1.png",
     )
+
     codes_ape = list(CODES_APE.keys())
     codes_ape.sort()
+
     selected_cat = st.selectbox(
         label="Sélectionner une catégorie d'entreprise :",
         options=codes_ape,
@@ -103,7 +71,7 @@ with st.sidebar:
 
     is_full_na = selected_df_filtered.isna().sum() == len(selected_df_filtered)
     full_na_variables = selected_df_filtered.columns[is_full_na]
-    print(full_na_variables)
+
     selected_df_filtered = selected_df_filtered.loc[:, ~is_full_na]
 
     available_variables_list = available_variables[
@@ -152,7 +120,10 @@ with st.sidebar:
         f"Lien vers la fiche Enthic: https://enthic-dataviz.netlify.app/entreprises/{company_df['SIREN']}"
     )
 
-col1, col2, col3, col4 = st.columns(4)
+
+transformations = {}
+
+col1, col2, col3 = st.columns(3)
 with col1:
     x_var = st.selectbox(
         "Abscisse :",
@@ -173,13 +144,6 @@ with col2:
         ),
     )
 with col3:
-    size_var = st.selectbox(
-        "Taille :",
-        help="Sélectionner une variable pour la taille des bulles :",
-        options=available_variables_list,
-        index=available_variables_list.index("Effectif moyen du personnel"),
-    )
-with col4:
     color_var = st.selectbox(
         "Couleur :",
         help="Sélectionner une variable pour la couleur des bulles :",
@@ -187,13 +151,23 @@ with col4:
         index=available_variables_list.index("Chiffres d’affaires nets"),
     )
 
-fig_1_df = selected_df_filtered.dropna(subset=[x_var, y_var, size_var, color_var])
+    color_var_log = st.checkbox(
+        "Échelle logarithmique",
+        True,
+        help="Permet d'activer l'échelle logarithmique pour la variable.",
+    )
+    if color_var_log:
+        transformations[color_var] = np.log10
+
+
+fig_1_df = selected_df_filtered.dropna(subset=[x_var, y_var])
 fig_1_companies_count = len(fig_1_df)
 if fig_1_companies_count:
     st.markdown(
         f"Avec votre sélection, il reste **{len(fig_1_df)}** entreprises à afficher.",
         unsafe_allow_html=True,
     )
+
     if company_df[[x_var, y_var]].isna().all():
         st.info(
             f"Il ny a pas les données suffisantes pour afficher la position de {company_df['nom']} dans le graphique."
@@ -204,8 +178,8 @@ if fig_1_companies_count:
         company_series=company_df,
         x_var=x_var,
         y_var=y_var,
-        size_var=size_var,
         color_var=color_var,
+        transformations=transformations,
     )
     st.plotly_chart(fig_1, use_container_width=True)
 else:
