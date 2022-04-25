@@ -37,3 +37,17 @@ NON_VARIABLES_COLUMNS = [
     "nom",
     "description",
 ]
+
+VARIABLES_TO_KEEP = [
+    "Bénéfices ou perte (Total des produits ‐ Total des charges)",
+    "Impôts sur les bénéfices",
+    "Résultat d'exploitation",
+    "Total des charges d’exploitation",
+    "Salaires et traitements",
+    "Charges sociales",
+    "Impôts, taxes et versements assimilés",
+    "Chiffres d’affaires nets",
+    "Subventions d’exploitation",
+    "Intérêts et charges assimilées",
+    "Produits financiers de participations",
+] + [FEATURES_NAME_MAPPING[e] for e in FEATURES_COLUMNS]

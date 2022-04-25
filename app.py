@@ -8,7 +8,13 @@ import streamlit as st
 from st_aggrid import AgGrid
 
 from figures import create_bubble_chart, create_hist
-from settings import CODES_APE, DATA_PATH, FEATURES_NAME_MAPPING, NON_VARIABLES_COLUMNS
+from settings import (
+    CODES_APE,
+    DATA_PATH,
+    FEATURES_NAME_MAPPING,
+    NON_VARIABLES_COLUMNS,
+    VARIABLES_TO_KEEP,
+)
 from utils import format_numerical_value
 
 
@@ -34,16 +40,11 @@ def load_data(data_path: Union[PathLike, str]):
         }
         | FEATURES_NAME_MAPPING
     )
+
     return indicateurs_df
 
 
 indicateurs_df = load_data(DATA_PATH)
-
-
-available_variables: pd.Series = indicateurs_df.columns[
-    ~indicateurs_df.columns.isin(NON_VARIABLES_COLUMNS)
-    & ~indicateurs_df.columns.str.contains("error_")
-].sort_values()
 
 
 with st.sidebar:
@@ -55,7 +56,7 @@ with st.sidebar:
     codes_ape.sort()
 
     selected_cat = st.selectbox(
-        label="Sélectionner une catégorie d'entreprise :",
+        label="Sélectionnez une catégorie d'entreprise :",
         options=codes_ape,
         help="Permet de filtrer les entreprises selon leur code APE.",
     )
@@ -63,7 +64,6 @@ with st.sidebar:
     selected_df = indicateurs_df.loc[
         (indicateurs_df.code_ape_complete.str.match("|".join(CODES_APE[selected_cat])))
     ]
-    selected_df = selected_df.rename(columns=FEATURES_NAME_MAPPING)
 
     total_company_count = selected_df.shape[0]
 
@@ -74,10 +74,6 @@ with st.sidebar:
 
     selected_df_filtered = selected_df_filtered.loc[:, ~is_full_na]
 
-    available_variables_list = available_variables[
-        ~available_variables.isin(full_na_variables)
-    ].tolist()
-
     st.markdown(
         f"**{total_company_count:,d}** au total dans cette catégorie ({len(selected_df_filtered)/indicateurs_df['SIREN'].nunique():.2%} du total).",
     )
@@ -85,7 +81,7 @@ with st.sidebar:
     company_names = np.sort(selected_df_filtered.nom.unique())
 
     selected_company_name = st.selectbox(
-        label="Sélectionner une entreprise :",
+        label="Sélectionnez une entreprise :",
         options=company_names,
         help="Sélectionnez une entreprise pour afficher des informations et sa position sur les graphiques.",
     )
@@ -127,44 +123,73 @@ col1, col2, col3 = st.columns(3)
 with col1:
     x_var = st.selectbox(
         "Abscisse :",
-        help="Sélectionner une variable pour l'axe des abscisses :",
-        options=available_variables_list,
-        index=available_variables_list.index(
+        help="Sélectionnez une variable pour l'axe des abscisses :",
+        options=VARIABLES_TO_KEEP,
+        index=VARIABLES_TO_KEEP.index(
             "Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts"
         ),
     )
+    x_var_log = st.checkbox(
+        "Échelle logarithmique",
+        False,
+        help="Permet d'activer l'échelle logarithmique pour la variable.",
+    )
+    if x_var_log:
+        transformations["x"] = np.log10
 
 with col2:
     y_var = st.selectbox(
         "Ordonnée :",
-        help="Sélectionner une variable pour l'axe des ordonnées :",
-        options=available_variables_list,
-        index=available_variables_list.index(
+        help="Sélectionnez une variable pour l'axe des ordonnées :",
+        options=VARIABLES_TO_KEEP,
+        index=VARIABLES_TO_KEEP.index(
             "Ratio entre les cotisations sociales et les salaires"
         ),
     )
+    y_var_log = st.checkbox(
+        "Échelle logarithmique",
+        False,
+        help="Permet d'activer l'échelle logarithmique pour la variable.",
+        key="y_var_log",
+    )
+    if y_var_log:
+        transformations["y"] = np.log10
+
 with col3:
     color_var = st.selectbox(
         "Couleur :",
-        help="Sélectionner une variable pour la couleur des bulles :",
-        options=available_variables_list,
-        index=available_variables_list.index("Chiffres d’affaires nets"),
+        help="Sélectionnez une variable pour la couleur des bulles :",
+        options=VARIABLES_TO_KEEP,
+        index=VARIABLES_TO_KEEP.index("Chiffres d’affaires nets"),
     )
 
     color_var_log = st.checkbox(
         "Échelle logarithmique",
-        True,
+        False,
         help="Permet d'activer l'échelle logarithmique pour la variable.",
+        key="color_var_log",
     )
     if color_var_log:
-        transformations[color_var] = np.log10
+        transformations["color"] = np.log10
+
+if x_var_log:
+    na_to_remove = (
+        selected_df_filtered[x_var].apply(np.log10).replace(-np.inf, np.nan).isna()
+    )
+    selected_df_filtered = selected_df_filtered.loc[~na_to_remove]
+if y_var_log:
+    na_to_remove = (
+        selected_df_filtered[y_var].apply(np.log10).replace(-np.inf, np.nan).isna()
+    )
+    selected_df_filtered = selected_df_filtered.loc[~na_to_remove]
 
 
 fig_1_df = selected_df_filtered.dropna(subset=[x_var, y_var])
 fig_1_companies_count = len(fig_1_df)
+
 if fig_1_companies_count:
     st.markdown(
-        f"Avec votre sélection, il reste **{len(fig_1_df)}** entreprises à afficher.",
+        f"Avec votre sélection, il reste **{fig_1_companies_count}** entreprises à afficher.",
         unsafe_allow_html=True,
     )
 
