@@ -117,8 +117,6 @@ with st.sidebar:
     )
 
 
-transformations = {}
-
 col1, col2, col3 = st.columns(3)
 with col1:
     x_var = st.selectbox(
@@ -134,8 +132,7 @@ with col1:
         False,
         help="Permet d'activer l'échelle logarithmique pour la variable.",
     )
-    if x_var_log:
-        transformations["x"] = np.log10
+
 
 with col2:
     y_var = st.selectbox(
@@ -152,8 +149,7 @@ with col2:
         help="Permet d'activer l'échelle logarithmique pour la variable.",
         key="y_var_log",
     )
-    if y_var_log:
-        transformations["y"] = np.log10
+
 
 with col3:
     color_var = st.selectbox(
@@ -169,18 +165,13 @@ with col3:
         help="Permet d'activer l'échelle logarithmique pour la variable.",
         key="color_var_log",
     )
-    if color_var_log:
-        transformations["color"] = np.log10
+
 
 if x_var_log:
-    na_to_remove = (
-        selected_df_filtered[x_var].apply(np.log10).replace(-np.inf, np.nan).isna()
-    )
+    na_to_remove = (selected_df_filtered[x_var] + 1e-7).apply(np.log10).isna()
     selected_df_filtered = selected_df_filtered.loc[~na_to_remove]
 if y_var_log:
-    na_to_remove = (
-        selected_df_filtered[y_var].apply(np.log10).replace(-np.inf, np.nan).isna()
-    )
+    na_to_remove = selected_df_filtered[y_var].apply(np.log10).isna()
     selected_df_filtered = selected_df_filtered.loc[~na_to_remove]
 
 
@@ -204,7 +195,9 @@ if fig_1_companies_count:
         x_var=x_var,
         y_var=y_var,
         color_var=color_var,
-        transformations=transformations,
+        log_x=x_var_log,
+        log_y=y_var_log,
+        log_color=color_var_log,
     )
     st.plotly_chart(fig_1, use_container_width=True)
 else:
@@ -228,6 +221,7 @@ AgGrid(
             "Commune",
             "Chiffres d’affaires nets",
             "Effectif moyen du personnel",
+            "Salaire moyen",
         ]
         + [x_var, y_var, color_var]
     ]

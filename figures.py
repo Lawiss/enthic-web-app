@@ -14,8 +14,12 @@ def create_bubble_chart(
     x_var: str,
     y_var: str,
     color_var: str,
-    transformations: Dict[str, Callable] = {},
+    log_x: bool = False,
+    log_y: bool = False,
+    log_color: bool = False,
 ) -> go.Figure:
+
+    epsilon = 10e-7  # Used to avoid -inf after log transformations
 
     df = df.copy()
     company_series = company_series.copy()
@@ -24,24 +28,18 @@ def create_bubble_chart(
     y_series = df[y_var].copy()
     color_series = df[color_var].copy()
 
-    hover_data_df = df[["nom", x_var, y_var, color_var]].copy()
-
+    hover_data_df = df[["nom"]].copy()
     hover_text = (
-        df.nom
-        + f"<br><b>{color_var} : </b> "
-        + color_series.apply(format_to_pretty_decimal)
-        + f"<br><b>{x_var} : </b>"
+        f"<b>{x_var} : </b>"
         + (x_series).apply(format_to_pretty_decimal)
         + f"<br><b>{y_var} : </b> "
         + (y_series).apply(format_to_pretty_decimal)
-        + "<extra>"
-        + df.nom
-        + "</extra>"
+        + f"<br><b>{color_var} : </b> "
+        + color_series.apply(format_to_pretty_decimal)
     )
+    hover_template = "%{text}<extra>%{customdata[0]}</extra>"
 
-    hover_template = f"{x_var} : %{{customdata[1]:,.2f}}<br> {y_var} : %{{customdata[2]:,.2f}}<br> {color_var} : %{{customdata[3]:,.2f}}<br><extra>%{{customdata[0]}}</extra>"
-
-    if transformations.get("color") == np.log10:
+    if log_color:
         color_series = color_series.apply(np.log10)
 
         colorbar_tickvals = np.arange(0, np.ceil(color_series).max(), 1)
@@ -50,14 +48,15 @@ def create_bubble_chart(
     else:
         colorbar_tickvals = None
         colorbar_ticktext = None
+
     fig = go.Figure(
         [
             go.Scatter(
-                x=x_series,
-                y=y_series,
+                x=x_series if not log_x else (x_series + epsilon),
+                y=y_series if not log_y else (y_series + epsilon),
                 marker_color=color_series,
-                # hoverinfo="text",
-                # hovertext=hover_text,
+                hoverinfo="text",
+                text=hover_text,
                 hovertemplate=hover_template,
                 mode="markers",
                 marker_colorscale=[
@@ -80,20 +79,17 @@ def create_bubble_chart(
         title_font_color="#2d3436",
         margin_t=10,
     )
-    if transformations.get("x") == np.log10:
+
+    if log_x:
         fig.update_xaxes(type="log")
-    if transformations.get("y") == np.log10:
+    if log_y:
         fig.update_yaxes(type="log")
 
     if not company_series[[x_var, y_var]].isna().any():
 
         fig.add_annotation(
-            x=math.log(company_series[x_var], 10)
-            if (transformations.get("x") == np.log10)
-            else company_series[x_var],
-            y=math.log(company_series[y_var], 10)
-            if (transformations.get("y") == np.log10)
-            else company_series[y_var],
+            x=math.log(company_series[x_var], 10) if log_x else company_series[x_var],
+            y=math.log(company_series[y_var], 10) if log_y else company_series[y_var],
             text=company_series["nom"],
             font_size=15,
             arrowhead=2,
