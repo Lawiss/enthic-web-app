@@ -221,7 +221,7 @@ fig_2 = create_hist(selected_df_filtered, company_series=company_df)
 st.plotly_chart(fig_2, use_container_width=True)
 if np.isnan(company_df["Salaire moyen"]):
     st.info(
-        f"Il ny a pas les données suffisantes pour afficher le salaire moyen de {company_df['nom']} sur le graphique."
+        f"Les données pour afficher le salaire moyen de {company_df['nom']} sont manquantes."
     )
 
 st.write("Vous pouvez explorer les données qui ont permis d'éditer ces graphiques :")
