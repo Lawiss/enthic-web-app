@@ -1,5 +1,9 @@
+# URL where data is located (currently on Entropeak's server)
 DATA_PATH = "https://entropeak-public-data.s3.eu-west-3.amazonaws.com/enthic/indicateurs_2020_full_20220412.csv"
 
+# list of APE codes to display and available in the application.
+# The dictionnary keys are the value displayed on the front end
+# and the values are regex to filter data in the dataset.
 CODES_APE = {
     "Supermarchés et Hypermarchés": ["^47\.11D", "^47\.11F"],
     "Cultures permanentes": ["^01\.2"],
@@ -9,6 +13,7 @@ CODES_APE = {
     "Construction aéronautique et spatiale": ["^30.3"],
 }
 
+# Dictionnary use to renames Enthic features to more natural names
 FEATURES_NAME_MAPPING = {
     "exploitation_share": "Part du résultat d'exploitation distribuée en participation et impôts",
     "overall_wages_weight": "Part de la masse salariale dans le total des charges d'exploitation",
@@ -19,6 +24,7 @@ FEATURES_NAME_MAPPING = {
     "data_availability": "Indicateur de bon remplissage de la déclaration comptable",
 }
 
+# Enthic features that we'll keep in the data
 FEATURES_COLUMNS = [
     "exploitation_share",
     "overall_wages_weight",
@@ -28,6 +34,7 @@ FEATURES_COLUMNS = [
     "exploitation_part",
 ]
 
+# Columns that are not enthic features neither accounting data but that are important for the application
 NON_VARIABLES_COLUMNS = [
     "SIREN",
     "Code postal",
@@ -38,6 +45,7 @@ NON_VARIABLES_COLUMNS = [
     "description",
 ]
 
+# Variables to keep in the dataset, other accounting related columns or Enthic's features will be filtered.
 VARIABLES_TO_KEEP = [
     "Bénéfices ou perte (Total des produits ‐ Total des charges)",
     "Impôts sur les bénéfices",

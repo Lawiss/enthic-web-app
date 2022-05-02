@@ -18,6 +18,34 @@ def create_bubble_chart(
     log_y: bool = False,
     log_color: bool = False,
 ) -> go.Figure:
+    """Creates a plotly bubble chart with the given variables for x axis, y axis, and the color of the bubbles.
+
+    Parameters
+    ----------
+    df : DataFrame
+        DataFrame including the variables needed to create the plot.
+    company_series: Series
+        Series object with data from one company that will be highlighted in the graph,
+        either with an annotation if both x_var and y_var data is available or with an vertical/horizontal line depending
+        on the availability of only x_var/y_var.
+    x_var: str
+        Variable to use for the x-axis.
+    y_var: str
+        Variable to use for the y-axis.
+    color_var: str
+        Variable to use for the color gradient of the bubbles. If some data points are not available, a default color is displayed.
+    log_x: bool
+        If True, transform the x-axis to logarithmic scale. Default False.
+    log_y: bool
+        If True, transform the y-axis to logarithmic scale. Default False.
+    log_color: bool
+        If True, transform the y-axis to logarithmic scale. Default False.
+
+    Returns
+    -------
+    go.Figure
+        Plotly figure object ready to be displayed.
+    """
 
     epsilon = 10e-7  # Used to avoid -inf after log transformations
 
@@ -29,6 +57,9 @@ def create_bubble_chart(
     color_series = df[color_var].copy()
 
     hover_data_df = df[["nom"]].copy()
+
+    # We use hover text along with hover template to be able to apply custom formating and
+    # add extra tag to show company name in the secondary box
     hover_text = (
         f"<b>{x_var} : </b>"
         + (x_series).apply(format_to_pretty_decimal)
@@ -85,6 +116,8 @@ def create_bubble_chart(
     if log_y:
         fig.update_yaxes(type="log")
 
+    # We add the highlighting of the given company data by creating either an annotation
+    # or a vertical/horizontal line if data is missing for one of the variable.
     if not company_series[[x_var, y_var]].isna().any():
 
         fig.add_annotation(
@@ -115,8 +148,24 @@ def create_bubble_chart(
     return fig
 
 
-def create_hist(series: pd.Series, company_series: pd.Series) -> go.Figure:
+def create_hist(series: pd.DataFrame, company_series: pd.Series) -> go.Figure:
+    """Creates a plotly histogram chart for the wage ("Salaire moyen") data
+    with a vertical line to show the value for the selected company if it is available.
 
+
+    Parameters
+    ----------
+    df : DataFrame
+        DataFrame including the variable needed to create the plot.
+    company_series: Series
+        Series object with data from one company that will be highlighted in the graph,
+        if data is available, a dotted vertical line will appear to show the company's value for wage.
+
+    Returns
+    -------
+    go.Figure
+        Plotly figure object ready to be displayed.
+    """
     fig = go.Figure(
         data=[
             go.Histogram(

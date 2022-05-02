@@ -1,0 +1,104 @@
+[
+    {
+        "name": "Bénéfices ou perte (Total des produits ‐ Total des charges)",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Impôts sur les bénéfices",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Résultat d'exploitation",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Total des charges d’exploitation",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Salaires et traitements",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Charges sociales",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Impôts, taxes et versements assimilés",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Chiffres d’affaires nets",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Subventions d’exploitation",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Intérêts et charges assimilées",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Produits financiers de participations",
+        "unit": "€",
+        "is_float": false,
+        "is_ratio": false
+    },
+    {
+        "name": "Part du résultat d'exploitation distribuée en participation et impôts",
+        "unit": "€",
+        "is_float": true,
+        "is_ratio": true
+    },
+    {
+        "name": "Part de la masse salariale dans le total des charges d'exploitation",
+        "unit": "€",
+        "is_float": true,
+        "is_ratio": true
+    },
+    {
+        "name": "Ratio entre les cotisations sociales et les salaires",
+        "unit": "€",
+        "is_float": true,
+        "is_ratio": true
+    },
+    {
+        "name": "Salaire moyen",
+        "unit": "€",
+        "is_float": true,
+        "is_ratio": false
+    },
+    {
+        "name": "Part des 3 résultats (exploitation, financier et exceptionnel) distribuée en participation et impôts",
+        "unit": "€",
+        "is_float": true,
+        "is_ratio": true
+    },
+    {
+        "name": "Part de la partie 'exploitation' dans le total du compte de résultat",
+        "unit": "€",
+        "is_float": true,
+        "is_ratio": true
+    }
+]

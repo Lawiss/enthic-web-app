@@ -28,7 +28,20 @@ st.set_page_config(
 
 
 @st.cache
-def load_data(data_path: Union[PathLike, str]):
+def load_data(data_path: Union[PathLike, str]) -> pd.DataFrame:
+    """Loads the CSV dataset from either a local path or an URL. Also renames a few columns of the dataset.
+    This function result is cached to avoid reload data each time user interacts with the application.
+
+    Parameters
+    ----------
+    data_path : str or PathLike object
+        Path or URL where CSV dataset is located
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with companies data
+    """
 
     indicateurs_df = pd.read_csv(data_path, index_col=0)
 
